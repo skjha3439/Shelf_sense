@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shelf Sense | Smart E-Library</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* --- UTILITY CLASSES (Replaces all inline styles) --- */
+        .z-max { z-index: 9999; }
+        
+        .w-full { width: 100%; }
+        .w-auto { width: auto; }
+        .h-full { height: 100%; }
+        
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .text-right { text-align: right; }
+        
+        .mb-5 { margin-bottom: 5px; }
+        .mb-10 { margin-bottom: 10px; }
+        .mb-15 { margin-bottom: 15px; }
+        .mb-20 { margin-bottom: 20px; }
+        .mb-25 { margin-bottom: 25px; }
+        .mt-5 { margin-top: 5px; }
+        .mt-10 { margin-top: 10px; }
+        .mt-15 { margin-top: 15px; }
+        .mt-20 { margin-top: 20px; }
+        .mr-10 { margin-right: 10px; }
+        .ml-10 { margin-left: 10px; }
+        .p-0 { padding: 0; }
+        .p-20 { padding: 20px; }
+        
+        .text-gray { color: #666; }
+        .text-gray-light { color: #999; }
+        .text-primary { color: var(--primary); }
+        .text-danger { color: #ef4444; }
+        .text-dark { color: #1e1b4b; }
+        .text-slate { color: #64748b; }
+        .text-xs { font-size: 12px; }
+        .text-sm { font-size: 13px; }
+        .text-xxs { font-size: 10px; }
+        .font-mono { font-family: monospace; }
+        
+        .bg-transparent { background: transparent; }
+        .bg-indigo { background: #4f46e5 !important; }
+        .bg-pink { background: #ec4899 !important; }
+        .bg-indigo-light { background: #6366f1 !important; }
+        .bg-green { background: #10b981 !important; }
+        .bg-gray-btn { background: #cbd5e0 !important; color: #333 !important; }
+        
+        .shadow-none { box-shadow: none; }
+        .border-none { border: none; }
+        .border-danger { border-color: #ef4444; }
+        .d-inline-block { display: inline-block; }
+        .overflow-hidden { overflow: hidden; }
+
+        /* --- LAYOUT & MODAL SIZING --- */
+        .modal-sm { width: 400px; max-width: 90%; padding: 30px; animation: popIn 0.3s ease; }
+        .modal-md { width: 500px; max-width: 95%; max-height: 90vh; overflow-y: auto; }
+        .modal-lg { width: 650px; max-width: 95%; max-height: 90vh; overflow-y: auto; }
+        
+        .grid-2-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .col-span-2 { grid-column: span 2; }
+        
+        .flex-center-gap { display: flex; gap: 12px; justify-content: center; }
+        .flex-end-gap { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-col { display: flex; flex-direction: column; }
+        .gap-15 { gap: 15px; }
+        .flex-1 { flex: 1; }
+        
+        /* --- BUTTON COMPONENTS --- */
+        .btn-auto { width: auto; margin: 0; }
+        .btn-outline { border: 1px solid #cbd5e0; padding: 10px 25px; border-radius: 8px; }
+        .btn-shadow { padding: 10px 30px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .btn-danger-outline { color: #ef4444; width: auto; border: 1px solid #ef4444; padding: 5px 10px; border-radius: 6px; margin-top: 0; background: transparent; cursor: pointer; }
+        
+        /* --- SPECIFIC UI COMPONENTS --- */
+        .dialog-icon-bg { width: 70px; height: 70px; background: #eef2ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto; }
+        .dialog-icon { font-size: 30px; color: var(--primary); }
+        .dialog-input { border: 2px solid #e2e8f0; background: #f8fafc; width: 100%; padding: 12px; border-radius: 10px; font-size: 16px; outline: none; text-align: center; }
+        
+        .unit-status-box { background: #f8f9fc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+        .unit-status-label { font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 10px; display: block; }
+        .add-copy-flex { margin-top: 15px; border-top: 1px solid #ddd; padding-top: 15px; display: flex; gap: 10px; }
+        
+        .qr-reader-box { width: 100%; min-height: 250px; background: #000; border-radius: 8px; }
+        .admin-seat-box { width: 350px; }
+        .admin-qr-wrapper { background: #f8f9fc; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed #cbd5e0; }
+        .camera-box-wrap { border: 2px solid #4f46e5; border-radius: 8px; overflow: hidden; }
+        
+        .ai-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); display: flex; align-items: center; gap: 8px; transition: transform 0.2s; }
+        .catalog-header { background: white; padding: 15px 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .live-badge { background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-left: 10px; }
+        
+        .issue-col-left { border-right: 1px solid #eee; padding-right: 20px; }
+        .issue-col-right { padding-left: 10px; }
+        .section-header-sm { font-size: 14px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+        
+        .search-bar-wrap { background: white; border: 1px solid #cbd5e0; padding: 10px 15px; border-radius: 12px; display: flex; align-items: center; }
+        .search-input-clean { flex: 1; border: none; outline: none; background: transparent; margin-left: 10px; }
+        .search-select-clean { width: auto; margin-left: 10px; border-left: 1px solid #eee; background: transparent; font-weight: 600; color: #4a5568; padding-left: 10px; border: none; border-radius: 0; }
+        
+        .student-form-wrap { border: 2px dashed #cbd5e0; }
+        .readonly-input { opacity: 0.7; cursor: not-allowed; }
+        
+        .seat-confirm-footer { padding: 10px 25px; background: #0d0c22; box-shadow: 0 4px 12px rgba(13,12,34,0.2); }
+        .seat-status-box { background: #fff5f9; border: 1px solid #ea4c89; }
+        .seat-icon-badge { background: #ea4c89; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: bold; }
+        .seat-num-text { font-weight: 700; font-size: 18px; color: #1e1b4b; margin: 0; }
+        .seat-label-text { margin: 0; font-size: 12px; color: #666; }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript"> (function(){ emailjs.init("dfZPLyZIN3m6VKvuZ"); })(); </script>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+    <script type="importmap"> { "imports": { "@google/generative-ai": "https://esm.run/@google/generative-ai" } } </script>
+</head>
+<body>
+
+    <div id="custom-dialog-overlay" class="hidden modal-overlay z-max">
+        <div class="student-card modal-sm text-center">
+            <div class="dialog-icon-bg">
+                <i id="dialog-icon" class="fas fa-info dialog-icon" aria-hidden="true"></i>
+            </div>
+            
+            <h3 id="dialog-title" class="text-dark mb-10">Notification</h3>
+            <p id="dialog-message" class="text-slate mb-25">Message goes here</p>
+            
+            <div id="dialog-input-container" class="hidden dialog-input-container">
+                <input type="text" id="dialog-input" class="dialog-input" aria-label="Dialog input" placeholder="Enter response">
+            </div>
+
+            <div class="flex-center-gap">
+                <button type="button" id="dialog-btn-cancel" class="secondary-btn hidden btn-auto btn-outline">Cancel</button>
+                <button type="button" id="dialog-btn-confirm" class="main-btn btn-auto btn-shadow">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-book-modal" class="hidden modal-overlay">
+        <div class="student-card modal-lg">
+            <h3 class="mb-20">New Book Entry</h3>
+            <form onsubmit="window.addNewBook(event)" class="grid-2-col">
+                <div class="input-group col-span-2"><label for="bk-title-new">Title</label><input type="text" id="bk-title-new" required></div>
+                <div class="input-group"><label for="bk-author-new">Author</label><input type="text" id="bk-author-new" required></div>
+                <div class="input-group"><label for="bk-isbn-new">ISBN</label><input type="text" id="bk-isbn-new" required></div>
+                <div class="input-group"><label for="bk-cat-new">Category</label><select id="bk-cat-new"><option>Technology</option><option>Fiction</option><option>Science</option></select></div>
+                <div class="input-group"><label for="bk-pdf-status-new">E-Book?</label><select id="bk-pdf-status-new" onchange="window.togglePdfInput(this.value)"><option value="no">No</option><option value="yes">Yes</option></select></div>
+                <div class="input-group hidden" id="pdf-url-group"><label for="bk-pdf-file-new">Upload PDF</label><input type="file" id="bk-pdf-file-new" accept="application/pdf"></div>
+                <div class="input-group"><label for="bk-cover-new">Cover</label><input type="file" id="bk-cover-new" accept="image/*"></div>
+                <div class="input-group col-span-2"><label for="bk-ids-new">Book IDs (Comma Separated)</label><input type="text" id="bk-ids-new" required placeholder="e.g. A01, A02, B01"></div>
+                <div class="col-span-2 text-right-mt">
+                    <button type="button" onclick="window.hideAddBookForm()" class="secondary-btn btn-auto mr-10">Cancel</button>
+                    <button type="submit" class="main-btn btn-auto btn-shadow">Add Book</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-book-modal" class="hidden modal-overlay">
+        <div id="book-info-card" class="student-card modal-lg">
+            <div class="book-info-header">
+                <div>
+                    <h2 id="bk-display-title" class="mb-5">Title</h2>
+                    <p id="bk-display-author" class="text-gray">Author</p>
+                    <a id="bk-pdf-link" href="#" target="_blank" class="status-tag hidden mt-5 d-inline-block">Read PDF</a>
+                </div>
+                <button type="button" onclick="window.deleteBook()" class="btn-danger-outline" title="Delete Book" aria-label="Delete Book"><i class="fas fa-trash" aria-hidden="true"></i></button>
+            </div>
+
+            <div class="unit-status-box">
+                <label class="unit-status-label">UNIT COPIES STATUS</label>
+                <div id="copy-inventory-grid" class="flex-end-gap"></div>
+                <div id="add-copy-container" class="hidden add-copy-flex">
+                    <input type="text" id="new-copy-id" class="flex-1" placeholder="Enter New Unit ID (e.g. B-09)">
+                    <button type="button" onclick="window.addSingleCopy()" class="main-btn btn-auto">Add</button>
+                </div>
+            </div>
+            <input type="hidden" id="bk-isbn-hidden">
+            
+            <div class="flex-end-gap">
+                <button type="button" id="edit-book-btn" class="main-btn btn-auto bg-indigo" onclick="window.toggleBookEditMode()"><i class="fas fa-plus-circle"></i> Add Copies</button>
+                <button type="button" id="update-cover-btn" class="main-btn btn-auto bg-pink" onclick="window.updateBookCover()"><i class="fas fa-image"></i> Update Cover</button>
+                <input type="file" id="update-cover-input" class="hidden" accept="image/*" title="Upload cover image" aria-label="Upload cover image" onchange="window.handleCoverUpdateUpload(event)">
+                <button type="button" id="update-pdf-btn" class="main-btn btn-auto bg-indigo-light" onclick="window.updateBookPDF()"><i class="fas fa-file-pdf"></i> Update PDF</button>
+                <input type="file" id="update-pdf-input" class="hidden" accept="application/pdf" title="Upload book PDF" aria-label="Upload book PDF" onchange="window.handlePDFUpdateUpload(event)">
+                <button type="button" class="secondary-btn btn-auto btn-outline" onclick="window.closeBookDetails()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qr-scanner-modal" class="hidden modal-overlay">
+        <div class="otp-box modal-sm text-center">
+            <h3 class="text-primary mb-15">Scan Seat QR</h3>
+            <div id="seat-reader" class="qr-reader-box"></div>
+            <p class="mt-10 text-gray text-xs">Point your camera at the desk QR code</p>
+            <button type="button" onclick="window.closeQRScanner()" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="admin-seat-modal" class="hidden modal-overlay">
+        <div class="otp-box admin-seat-box text-center">
+            <div class="admin-seat-header">
+                <h3 id="adm-modal-title" class="m-0 text-dark">Seat Details</h3>
+                <span id="adm-modal-status" class="status-tag">Available</span>
+            </div>
+            <div class="admin-qr-wrapper">
+                <p class="text-gray mb-10 text-xs">Desk QR Code (Printable)</p>
+                <div id="admin-generated-qr" class="flex-center-gap"></div>
+                <p id="adm-qr-label" class="text-gray-light mt-5 text-xxs font-mono">TOKEN</p>
+            </div>
+            <div class="text-left mb-15">
+                <label class="text-gray text-xs">Current Occupant</label>
+                <div id="adm-modal-user" class="text-dark">--</div>
+            </div>
+            <button type="button" onclick="document.getElementById('admin-seat-modal').classList.add('hidden')" class="main-btn bg-gray-btn">Close</button>
+        </div>
+    </div>
+
+    <div id="issue-verify-modal" class="hidden modal-overlay">
+        <div class="otp-box modal-sm">
+            <h3>Verify Student</h3>
+            <p class="text-gray mb-20 text-xs">Request for: <b id="verify-book-title">--</b></p>
+            <div id="verify-reader-container" class="hidden mb-15 camera-box-wrap">
+                <div id="verify-reader" class="w-full"></div>
+                <button type="button" onclick="window.stopVerifyCamera()" class="secondary-btn text-danger w-full text-xs">Stop Camera</button>
+            </div>
+            <div class="flex-center-gap mb-20">
+                <button type="button" onclick="window.adminScanStudentQR()" class="main-btn bg-indigo"><i class="fas fa-camera"></i> Scan ID Card</button>
+            </div>
+            <input type="text" id="verify-student-roll" placeholder="Or Enter Roll No. manually">
+            <button type="button" onclick="window.finalizeIssueBook()" class="main-btn bg-green mt-15">Approve</button>
+            <button type="button" onclick="document.getElementById('issue-verify-modal').classList.add('hidden')" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+    
+    <div id="book-detail-modal" class="hidden modal-overlay">
+        <div class="otp-box modal-md text-left p-20">
+            <h3 id="md-book-title" class="mb-5">Title</h3>
+            <p class="text-gray mb-20">Enter Book Unit ID.</p>
+            <input type="text" id="md-book-copy-id" class="w-full mb-20" placeholder="e.g. EJ001">
+            <button type="button" onclick="window.submitIssueRequest()" class="main-btn">Request Issue</button>
+            <button type="button" onclick="document.getElementById('book-detail-modal').classList.add('hidden')" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="dashboard-details-modal" class="hidden modal-overlay">
+        <div class="student-card modal-lg">
+            <h3 class="mb-15">Borrowed Books & Fines</h3>
+            <div id="dashboard-details-content">Loading...</div>
+            <button type="button" onclick="window.closeDashboardDetails()" class="secondary-btn text-right-mt">Close</button>
+        </div>
+    </div>
+
+    <div id="edit-student-modal" class="hidden modal-overlay">
+        <div class="student-card modal-md">
+            <h3 class="mb-20">Edit Student Details</h3>
+            <form onsubmit="window.saveStudentEdit(event)" class="flex-col gap-15">
+                <input type="hidden" id="edit-st-original-email">
+                
+                <div class="input-group"><label for="edit-st-email">Email (Read-Only ID)</label><input type="email" id="edit-st-email" disabled class="readonly-input"></div>
+                
+                <div class="grid-2-col">
+                    <div class="input-group"><label for="edit-st-name">Name</label><input type="text" id="edit-st-name" required></div>
+                    <div class="input-group"><label for="edit-st-roll">Roll No</label><input type="text" id="edit-st-roll" required></div>
+                </div>
+
+                <div class="grid-2-col">
+                    <div class="input-group"><label for="edit-st-dept">Dept</label>
+                        <select id="edit-st-dept" required>
+                            <option value="CSE">CSE</option>
+                            <option value="CSE (AI&DS)">CSE (AI&DS)</option>
+                            <option value="CSE (CS)">CSE (CS)</option>
+                            <option value="CSE (QT)">CSE (QT)</option>
+                            <option value="ECE">ECE</option>
+                            <option value="ECE (VLSI)">ECE (VLSI)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label for="edit-st-sem">Sem</label>
+                        <select id="edit-st-sem" required>
+                            <option value="1st">1st</option><option value="2nd">2nd</option>
+                            <option value="3rd">3rd</option><option value="4th">4th</option>
+                            <option value="5th">5th</option><option value="6th">6th</option>
+                            <option value="7th">7th</option><option value="8th">8th</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="input-group"><label for="edit-st-phone">Phone</label><input type="tel" id="edit-st-phone" required></div>
+
+                <div class="text-right-mt">
+                    <button type="button" onclick="document.getElementById('edit-student-modal').classList.add('hidden')" class="secondary-btn btn-auto mr-10">Cancel</button>
+                    <button type="submit" class="main-btn btn-auto btn-shadow">Update</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="main-container" id="login-view">
+        <div class="left-panel"><img src="https://i.postimg.cc/PJw8pHNr/Screenshot-2025-12-29-at-11-29-05-AM.png" alt="Library" class="hero-image"></div>
+        <div class="right-panel" id="right-panel">
+            <div class="form-wrapper">
+                <h2 id="form-title">Student Sign in</h2>
+                <form id="loginForm" onsubmit="window.handleLoginSubmit(event)">
+                    <div class="input-group"><label>Email Address</label><input type="email" id="emailInput" placeholder="name@iiitmanipur.ac.in" required></div>
+                    <div class="input-group hidden" id="admin-password-group"><label>Admin Password</label><input type="password" id="adminPasswordInput" placeholder="Password"></div>
+                    <p id="error-msg" class="error-msg"></p>
+                    <button type="submit" class="main-btn" id="action-btn">Send OTP</button>
+                    <div class="text-center mt-20"><a href="#" class="admin-link" id="toggle-auth-btn" onclick="window.toggleAuthMode(event)">Login as Admin</a></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="otp-overlay" class="hidden modal-overlay">
+        <div class="otp-box">
+            <h3>Verification</h3>
+            <p>Code sent to <b id="otp-email-display"></b></p>
+            <input type="text" id="otpInput" maxlength="6" placeholder="123456" autocomplete="off">
+            <p id="otp-error" class="error-msg"></p>
+            <button type="button" onclick="window.verifyOtp()" class="main-btn">Verify</button>
+            <button type="button" onclick="window.closeOtp()" class="secondary-btn">Cancel</button>
+        </div>
+    </div>
+
+    <div id="dashboard-view" class="hidden dashboard-container">
+        <aside class="sidebar">
+            <button type="button" class="sidebar-close-btn" onclick="window.toggleSidebar()" title="Close Sidebar" aria-label="Close Sidebar"><i class="fas fa-times" aria-hidden="true"></i></button>
+            
+            <div class="brand"><i class="fas fa-book-open"></i> <span>Shelf Sense</span></div>
+            <ul class="side-menu"></ul> 
+            <div class="logout-wrapper"><button type="button" onclick="window.logout()" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</button></div>
+        </aside>
+
+        <div class="sidebar-overlay" onclick="window.toggleSidebar()"></div>
+
+        <main class="main-content">
+            <header class="top-header">
+                <button type="button" class="mobile-menu-btn" onclick="window.toggleSidebar()" title="Open Menu" aria-label="Open Menu"><i class="fas fa-bars" aria-hidden="true"></i></button>
+                <h2 id="page-title" class="flex-1 m-0">Overview</h2>
+                <style>
+                    .notification-trigger { cursor: pointer; position: relative; }
+                    .notif-badge { position: absolute; top: -5px; right: -5px; background: #ea4c89; color: white; border-radius: 50%; width: 15px; height: 15px; font-size: 10px; display: flex; justify-content: center; align-items: center; }
+                    .notification-dropdown { position: absolute; top: 35px; right: 0; width: 300px; background: white; border: 1px solid #eee; padding: 10px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); z-index: 2000; }
+                    .notification-title { font-size: 14px; }
+                </style>
+                <div onclick="window.toggleNotifications()" class="notification-trigger" title="View Notifications" aria-label="View Notifications">
+                    <i class="fas fa-bell notification-icon"></i>
+                    <span id="notif-badge" class="hidden notif-badge">0</span>
+                    <div id="notification-dropdown" class="hidden notification-dropdown">
+                        <h4 class="mb-10 notification-title">Notifications</h4>
+                        <div id="notif-list"></div>
+                    </div>
+                </div>
+            </header>
+
+            <div id="section-dashboard" class="content-section">
+                <div class="dashboard-top-row">
+                    <div class="welcome-banner">
+                        <div class="profile-main">
+                            <img src="https://placehold.co/100" class="big-profile-img" id="dash-profile-img" alt="Profile Picture">
+                            <div><h1 id="db-name">Hello</h1><p class="roll-badge" id="db-role">--</p><p class="dept-text" id="db-dept">--</p></div>
+                        </div>
+                    </div>
+                    <div id="dashboard-id-card" class="digital-id-card hidden">
+                        <h5 class="text-gray mb-10 text-xs">DIGITAL LIBRARY CARD</h5>
+                        <div id="dash-qr-code"></div> <svg id="dash-barcode"></svg>
+                    </div>
+                </div>
+                <div id="admin-quick-search" class="hidden student-search-box flex-center-gap bg-transparent border-none p-0">
+                    <input type="text" placeholder="Find Student..." class="dialog-input">
+                    <button type="button" class="search-btn" title="Search" aria-label="Search"><i class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="stats-grid">
+                    <div class="dashboard-card" onclick="window.showBorrowedDetails()" role="button" tabindex="0">
+                        <div class="card-icon bg-indigo text-primary card-icon--borrowed"><i class="fas fa-book" aria-hidden="true"></i></div>
+                        <div><h3 id="stat-1">0</h3><p>Borrowed (Click)</p></div>
+                    </div>
+                    <div class="dashboard-card" onclick="window.showDueSoonDetails()" role="button" tabindex="0">
+                        <div class="card-icon text-primary card-icon--due"><i class="fas fa-clock" aria-hidden="true"></i></div>
+                        <div><h3 id="stat-2">0</h3><p>Due Soon</p></div>
+                    </div>
+                    <div class="dashboard-card" onclick="window.showFineDetails()" role="button" tabindex="0">
+                        <div class="card-icon text-primary card-icon--fine"><i class="fas fa-rupee-sign" aria-hidden="true"></i></div>
+                        <div><h3 id="stat-3">0</h3><p>Fines</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-inventory" class="content-section hidden">
+                <div class="student-search-box search-bar-wrap mb-20">
+                    <input type="text" id="adminBookSearchInput" class="search-input-clean" placeholder="Search ISBN, Title, Author..." onkeyup="if(event.key === 'Enter') window.searchAdminInventory()">
+                    <button type="button" onclick="window.searchAdminInventory()" class="search-btn" title="Search Inventory" aria-label="Search Inventory"><i class="fas fa-search" aria-hidden="true"></i></button>
+                    
+                    <button type="button" onclick="document.getElementById('csv-upload-input').click()" class="main-btn btn-auto bg-green flex-center-gap ml-10">
+                        <i class="fas fa-file-csv" aria-hidden="true"></i> Import CSV
+                    </button>
+                    <input type="file" id="csv-upload-input" class="hidden" accept=".csv" title="Upload CSV file" aria-label="Upload CSV file" onchange="window.handleCSVUpload(event)">
+                </div>
+                <div id="admin-book-list-container" class="student-card mt-20">
+                    <p class="p-20 text-center text-gray">Loading Inventory...</p>
+                </div>
+                <button type="button" onclick="window.showAddBookForm()" class="add-fab" title="Add Book" aria-label="Add Book"><i class="fas fa-plus" aria-hidden="true"></i></button>
+            </div>
+
+            <style>
+                .overflow-y-auto { overflow-y: auto; }
+                .issue-request-icon { color: #4f46e5; }
+                .return-request-icon { color: #10b981; }
+            </style>
+            <div id="section-issue" class="content-section hidden">
+                <div class="student-card h-full flex-col">
+                    <h3 class="mb-20">Issue & Return Management</h3>
+                    
+                    <div class="grid-2-col flex-1 overflow-hidden">
+                        <div class="flex-col h-full issue-col-left">
+                            <h4 class="mb-15 text-slate section-header-sm">
+                                <i class="fas fa-hand-holding issue-request-icon" aria-hidden="true"></i> Pending Issue Requests
+                            </h4>
+                            <div id="issue-requests-list" class="flex-1 overflow-hidden overflow-y-auto"></div>
+                        </div>
+                        
+                        <div class="flex-col h-full issue-col-right">
+                            <h4 class="mb-15 text-slate section-header-sm">
+                                <i class="fas fa-undo return-request-icon" aria-hidden="true"></i> Return Requests
+                            </h4>
+                            <div id="return-requests-list" class="flex-1 overflow-hidden overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-students" class="content-section hidden">
+               <div class="student-search-box search-bar-wrap mb-20">
+                    <input type="text" id="studentSearchInput" class="search-input-clean" placeholder="Search by Name or Roll No..." onkeyup="if(event.key === 'Enter') window.searchStudent()">
+                    <button type="button" onclick="window.searchStudent()" class="search-btn" title="Search Student" aria-label="Search Student"><i class="fas fa-search" aria-hidden="true"></i></button>
+                    
+                    <button type="button" onclick="document.getElementById('student-csv-upload').click()" class="main-btn btn-auto bg-green flex-center-gap ml-10">
+                        <i class="fas fa-file-csv" aria-hidden="true"></i> Import CSV
+                    </button>
+                    <input type="file" id="student-csv-upload" class="hidden" accept=".csv" title="Upload student CSV file" aria-label="Upload student CSV file" onchange="window.handleStudentCSVUpload(event)">
+               </div>
+               
+               <div id="add-student-form" class="student-card hidden student-form-wrap mb-20">
+                   <h3 class="mb-20">New Student</h3>
+                   <form onsubmit="window.addNewStudent(event)" class="grid-2-col">
+                       <div class="input-group"><label for="new-roll">Roll No</label><input type="text" id="new-roll" required placeholder="Enter roll number" title="Roll Number"></div>
+<div class="input-group"><label for="new-name">Name</label><input type="text" id="new-name" required placeholder="Enter student name" title="Student Name"></div>
+                        
+                       <div class="input-group"><label for="new-dept">Dept</label>
+                           <select id="new-dept" required>
+                            <option disabled selected>Select Branch</option>
+                            <option value="CSE">CSE</option>
+                            <option value="CSE (AI&DS)">CSE (AI&DS)</option>
+                            <option value="CSE (CS)">CSE (CS)</option>
+                            <option value="CSE (QT)">CSE (QT)</option>
+                            <option value="ECE">ECE</option>
+                            <option value="ECE (VLSI)">ECE (VLSI)</option>
+                           </select>
+                       </div>
+
+                       <div class="input-group"><label for="new-sem">Sem</label><select id="new-sem" required><option disabled selected>Select</option><option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option><option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option><option value="7th">7th</option><option value="8th">8th</option></select></div>
+                       
+                       <div class="input-group"><label for="new-phone">Phone</label><input type="tel" id="new-phone" required placeholder="10-digit Mobile" title="Phone"></div>
+                       <div class="input-group"><label for="new-email">Email</label><input type="email" id="new-email" required placeholder="Enter email address" title="Email"></div>
+                       
+                       <div class="col-span-2 text-right-mt">
+                           <button type="button" onclick="window.hideAddForm()" class="secondary-btn btn-auto mr-10">Cancel</button>
+                           <button type="submit" class="main-btn btn-auto btn-shadow">Save</button>
+                       </div>
+                   </form>
+               </div>
+
+               <div id="student-list-container" class="student-card">
+                   <h3 class="mb-20">Registered Students</h3>
+                   <table class="data-table"><thead><tr><th>Roll</th><th>Name</th><th>Dept</th><th>Sem</th><th>Phone</th><th>Action</th></tr></thead><tbody id="student-list-body"></tbody></table>
+               </div>
+               
+               <button type="button" onclick="window.showAddForm()" class="add-fab" title="Add Student" aria-label="Add Student"><i class="fas fa-plus" aria-hidden="true"></i></button>
+            </div>
+
+            <div id="section-books" class="content-section hidden">
+                <div class="student-card bg-transparent shadow-none p-0">
+                    <div class="catalog-header mb-20 flex-between">
+                        <div class="flex-center-gap">
+                            <h3 class="m-0 text-dark">Library Catalog</h3>
+                            <span class="live-badge">Live</span>
+                        </div>
+                        
+                        <button type="button" onclick="window.getSmartRecommendations()" class="main-btn btn-auto ai-btn">
+                            <i class="fas fa-sparkles" aria-hidden="true"></i> <span>AI Suggest</span>
+                        </button>
+                    </div>
+                    
+                    <div class="book-grid" id="student-book-grid"></div>
+                </div>
+            </div>
+
+            <div id="section-ebooks" class="content-section hidden">
+                <div class="student-card bg-transparent shadow-none p-0">
+                    <div class="student-search-box search-bar-wrap mb-20">
+                        <i class="fas fa-search text-slate" aria-hidden="true"></i>
+                        <input type="text" id="ebookSearchInput" class="search-input-clean" placeholder="Search e-books..." onkeyup="window.loadEbooks()">
+                        <select id="ebookSort" class="search-select-clean" onchange="window.loadEbooks()" aria-label="Sort e-books" title="Sort e-books">
+                            <option value="title">Sort: Title</option>
+                            <option value="author">Sort: Author</option>
+                        </select>
+                    </div>
+                    <div id="ebook-list-container" class="book-grid"></div>
+                </div>
+            </div>
+
+            <div id="section-bookings" class="content-section hidden">
+                <div class="student-card">
+                    <h3 class="text-center mb-20">Library Floor Plan</h3>
+                    <div class="map-container-wrapper">
+                        <div class="library-floor" id="student-seat-grid">
+                            <div class="map-obj shelf shelf-1">SHELF-1</div><div class="map-obj shelf shelf-2">SHELF-2</div><div class="seat available s-D1" id="seat-D1" onclick="window.selectSeat(this, 'D1')">D1</div><div class="map-obj counter">COUNTER</div><div class="map-obj shelf shelf-3">SHELF-3</div><div class="map-obj table-rect table-a">TABLE A</div><div class="seat available s-A1" id="seat-A1" onclick="window.selectSeat(this, 'A1')">A1</div><div class="seat available s-A4" id="seat-A4" onclick="window.selectSeat(this, 'A4')">A4</div><div class="seat available s-A5" id="seat-A5" onclick="window.selectSeat(this, 'A5')">A5</div><div class="seat available s-A6" id="seat-A6" onclick="window.selectSeat(this, 'A6')">A6</div><div class="seat available s-A2" id="seat-A2" onclick="window.selectSeat(this, 'A2')">A2</div><div class="seat available s-A3" id="seat-A3" onclick="window.selectSeat(this, 'A3')">A3</div><div class="map-obj shelf shelf-4">SHELF-4</div><div class="map-obj table-rect table-b">TABLE B</div><div class="seat available s-B1" id="seat-B1" onclick="window.selectSeat(this, 'B1')">B1</div><div class="seat available s-B2" id="seat-B2" onclick="window.selectSeat(this, 'B2')">B2</div><div class="map-obj shelf shelf-6">SHELF-6</div><div class="map-obj shelf shelf-8">SHELF-8</div><div class="seat available s-C1" id="seat-C1" onclick="window.selectSeat(this, 'C1')">C1</div><div class="seat available s-C2" id="seat-C2" onclick="window.selectSeat(this, 'C2')">C2</div><div class="seat available s-C3" id="seat-C3" onclick="window.selectSeat(this, 'C3')">C3</div><div class="map-obj shelf shelf-5">SHELF-5</div><div class="map-obj shelf shelf-7">SHELF-7</div><div class="entrance">ENTRANCE</div>
+                        </div>
+                    </div>
+                    <div class="booking-footer hidden seat-confirm-footer" id="seat-selection-footer">
+                        <div class="flex-center-gap">
+                            <div class="seat-icon-badge"><i class="fas fa-check" aria-hidden="true"></i></div>
+                            <div><p class="seat-label-text">Selected Seat</p><span id="selected-seat-num" class="seat-num-text">--</span></div>
+                        </div>
+                        <button type="button" onclick="window.confirmSeatBooking()" class="main-btn btn-auto seat-confirm-footer">Confirm Booking</button>
+                    </div>
+                    <div id="checkin-status-area" class="student-card hidden mt-20 seat-status-box"></div>
+                </div>
+            </div>
+
+            <div id="section-seats-admin" class="content-section hidden">
+                <div class="seat-map-container student-card">
+                    <h3 class="mb-20">Live Seat Monitor</h3>
+                    <div class="map-container-wrapper">
+                        <div class="library-floor" id="admin-seat-grid">
+                            <div class="map-obj shelf shelf-1">SHELF-1</div><div class="map-obj shelf shelf-2">SHELF-2</div><div class="seat available s-D1" id="adm-seat-D1" onclick="window.adminViewSeat('D1')">D1</div><div class="map-obj counter">COUNTER</div><div class="map-obj shelf shelf-3">SHELF-3</div><div class="map-obj table-rect table-a">TABLE A</div><div class="seat available s-A1" id="adm-seat-A1" onclick="window.adminViewSeat('A1')">A1</div><div class="seat available s-A4" id="adm-seat-A4" onclick="window.adminViewSeat('A4')">A4</div><div class="seat available s-A5" id="adm-seat-A5" onclick="window.adminViewSeat('A5')">A5</div><div class="seat available s-A6" id="adm-seat-A6" onclick="window.adminViewSeat('A6')">A6</div><div class="seat available s-A2" id="adm-seat-A2" onclick="window.adminViewSeat('A2')">A2</div><div class="seat available s-A3" id="adm-seat-A3" onclick="window.adminViewSeat('A3')">A3</div><div class="map-obj shelf shelf-4">SHELF-4</div><div class="map-obj table-rect table-b">TABLE B</div><div class="seat available s-B1" id="adm-seat-B1" onclick="window.adminViewSeat('B1')">B1</div><div class="seat available s-B2" id="adm-seat-B2" onclick="window.adminViewSeat('B2')">B2</div><div class="map-obj shelf shelf-6">SHELF-6</div><div class="map-obj shelf shelf-8">SHELF-8</div><div class="seat available s-C1" id="adm-seat-C1" onclick="window.adminViewSeat('C1')">C1</div><div class="seat available s-C2" id="adm-seat-C2" onclick="window.adminViewSeat('C2')">C2</div><div class="seat available s-C3" id="adm-seat-C3" onclick="window.adminViewSeat('C3')">C3</div><div class="map-obj shelf shelf-5">SHELF-5</div><div class="map-obj shelf shelf-7">SHELF-7</div><div class="entrance">ENTRANCE</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="section-feedbacks" class="content-section hidden">
+                <div class="student-card modal-lg m-auto">
+                    <h3>Send Suggestion</h3>
+                    <form onsubmit="event.preventDefault(); window.CustomAlert('Feedback Sent!'); this.reset();">
+                        <div class="input-group">
+                            <label for="feedback-message">Message</label>
+                            <textarea id="feedback-message" name="message" class="w-full h-full min-h-100" required placeholder="Write your suggestion or feedback here" title="Feedback message"></textarea>
+                        </div>
+                        <button type="submit" class="main-btn">Send</button>
+                    </form>
+                </div>
+            </div>
+            
+        </main>
+    </div>
+
+    <div id="chatbot-widget" class="chatbot-widget hidden">
+        <div id="chat-window" class="chat-window hidden">
+            <div class="chat-header"><span>AI Librarian</span><button type="button" onclick="window.toggleChat()" class="bg-transparent border-none text-white" title="Close Chat" aria-label="Close Chat">&times;</button></div>
+            <div id="chat-messages" class="chat-messages"><div class="chat-bubble bot">Hello!</div></div>
+            <div class="chat-input-area"><input type="text" id="chatInput" aria-label="Chat message" placeholder="Type your message...">
+                <button type="button" onclick="window.sendChatMessage()" title="Send Message" aria-label="Send Message"><i class="fas fa-paper-plane" aria-hidden="true"></i></button>
+            </div>
+        </div>
+        <button type="button" id="chat-fab" class="chat-fab" onclick="window.toggleChat()" title="Open AI Chat" aria-label="Open AI Chat"><i class="fas fa-robot" aria-hidden="true"></i></button>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
