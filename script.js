@@ -1,9 +1,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, getDocs, deleteDoc, addDoc, where, query, serverTimestamp, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDPeTE4bGq50uubVqpdOp0pFrc1MvWVm7I",
@@ -204,7 +203,7 @@ async function handleLoginSubmit(e){
     if(isAdminMode){
         const p = document.getElementById('adminPasswordInput').value;
         
-        // Manual Admin Override for Shivam
+        // --- MANUAL ADMIN OVERRIDE FOR SHIVAM ---
         if (m === "shivam@iiitmanipur.ac.in" && p === "shivy123") {
             currentEmail = m;
             isAdminMode = true;
@@ -225,7 +224,6 @@ async function handleLoginSubmit(e){
     }
 
     // --- STUDENT LOGIC (NEW INSTANT PASSWORDLESS FLOW) ---
-    // If organizationDomain is set, validate it
     if(organizationDomain !== "" && !m.endsWith(organizationDomain)){ 
         r.innerText = `Access restricted to ${organizationDomain}`; 
         return; 
@@ -239,7 +237,6 @@ async function handleLoginSubmit(e){
         
         if (d.exists()) {
             currentEmail = m;
-            // Instantly perform anonymous authentication session
             signInAnonymously(auth)
             .then(() => {
                 localStorage.setItem('studentEmail', currentEmail);
@@ -253,7 +250,7 @@ async function handleLoginSubmit(e){
                 showDashboard();
             });
         } else {
-            b.innerText = "Send OTP"; b.disabled = false;
+            b.innerText = "Sign In"; b.disabled = false;
             r.innerText = "Access Denied: Student email not registered in Library Database.";
         }
     } catch(err){ 
@@ -262,6 +259,19 @@ async function handleLoginSubmit(e){
         b.disabled = false; 
     }
 }
+
+window.handleGoogleSignIn = async function() {
+    const provider = new GoogleAuthProvider();
+    const r = document.getElementById('error-msg');
+    if(r) r.innerText = "";
+    
+    try {
+        await signInWithPopup(auth, provider);
+    } catch(err) {
+        console.error("Google Authentication Interrupted:", err);
+        if(r) r.innerText = "Google Sign-In window closed or timed out.";
+    }
+};
 
 function showOtpScreen(m){
     document.getElementById('otp-email-display').innerText=m;
@@ -316,8 +326,6 @@ async function showDashboard() {
     
     try { initRealtimeSeats(); } catch(e) {}
     try { initNotificationSystem(); } catch(e) {}
-    
-    // AI Initialization handled by override at the end of file
 
     const dueSoonCard = document.querySelector('.stats-grid .dashboard-card:nth-child(2)');
 
@@ -420,11 +428,8 @@ async function updateAdminStats() {
     document.getElementById('stat-1').innerText = snap.size;
 }
 
-// --- SHOW BORROWED DETAILS (UPDATED) ---
 window.showBorrowedDetails = async () => {
     const modal = document.getElementById('dashboard-details-modal');
-    
-    // RESET TITLE
     const titleEl = modal.querySelector('h3');
     if(titleEl) titleEl.innerText = "Borrowed Books & Fines";
 
@@ -452,7 +457,6 @@ window.showBorrowedDetails = async () => {
         const fineStyle = fine > 0 ? "color:red;font-weight:bold;" : "color:green;";
         const userCol = isAdminMode ? data.studentName : "Physical";
 
-        // Button Logic
         let actionCell = "";
         if(!isAdminMode) {
             if(data.returnRequested) {
@@ -467,12 +471,9 @@ window.showBorrowedDetails = async () => {
     container.innerHTML = html + "</tbody></table>";
 };
 
-// --- SHOW DUE SOON DETAILS (UPDATED) ---
 window.showDueSoonDetails = async () => {
     const modal = document.getElementById('dashboard-details-modal');
     const container = document.getElementById('dashboard-details-content');
-    
-    // Change Title Dynamically
     const titleEl = modal.querySelector('h3');
     if(titleEl) titleEl.innerText = "Books Due Soon (< 7 Days)";
     
@@ -495,17 +496,14 @@ window.showDueSoonDetails = async () => {
             const data = docSnap.data();
             const issueDate = data.issuedAt.toDate();
             const dueDate = new Date(issueDate);
-            dueDate.setDate(issueDate.getDate() + 30); // 30 Day policy
+            dueDate.setDate(issueDate.getDate() + 30);
             const now = new Date();
-            
             const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
 
-            // FILTER: Only show books due in 0 to 7 days
             if (daysUntilDue >= 0 && daysUntilDue <= 7) {
                 count++;
                 const urgencyColor = daysUntilDue <= 3 ? "#ea4c89" : "#f97316"; 
                 
-                // Button Logic
                 let actionCell = "";
                 if(!isAdminMode) {
                     if(data.returnRequested) {
@@ -535,12 +533,9 @@ window.showDueSoonDetails = async () => {
     }
 };
 
-// --- SHOW FINE DETAILS ---
 window.showFineDetails = async () => {
     const modal = document.getElementById('dashboard-details-modal');
     const container = document.getElementById('dashboard-details-content');
-    
-    // Change Title Dynamically
     const titleEl = modal.querySelector('h3');
     if(titleEl) titleEl.innerText = "Fine Breakdown (₹50/day)";
     
@@ -564,13 +559,11 @@ window.showFineDetails = async () => {
             const data = doc.data();
             const issueDate = data.issuedAt.toDate();
             const dueDate = new Date(issueDate);
-            dueDate.setDate(issueDate.getDate() + 30); // 30 Day Policy
+            dueDate.setDate(issueDate.getDate() + 30);
             const now = new Date();
-            
             const diffTime = now - dueDate;
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-            // FILTER: Only show books that are actually overdue (Positive diffDays)
             if (diffDays > 0) {
                 count++;
                 const fine = diffDays * 50;
@@ -588,7 +581,6 @@ window.showFineDetails = async () => {
         if (count === 0) {
              container.innerHTML = "<p style='padding:20px; text-align:center; color:#10b981; font-weight:bold;'><i class='fas fa-check-circle'></i> No pending fines! Good job.</p>";
         } else {
-             // Add Total Row
              html += `<tr style="background:#fff1f2; font-weight:bold; border-top: 2px solid #e11d48;">
                         <td colspan="3" style="text-align:right;">Total Pending:</td>
                         <td style="color:#be123c; font-size:16px;">₹${totalFine}</td>
@@ -1027,7 +1019,6 @@ window.loadAdminInventory = function(sortBy='title') {
     });
 }
 
-// --- UPDATED: DISPLAY BOOK WITH PDF LINK TOGGLE ---
 window.displayBook = async (id) => {
     try {
         const bookDoc = await getDoc(doc(db, "books", id));
@@ -1039,7 +1030,6 @@ window.displayBook = async (id) => {
         document.getElementById('bk-display-author').innerText = book.author;
         document.getElementById('bk-isbn-hidden').value = book.isbn;
 
-        // --- Handle PDF Link Visibility ---
         const pdfLink = document.getElementById('bk-pdf-link');
         if (book.pdfUrl) {
             pdfLink.href = book.pdfUrl;
@@ -1172,7 +1162,6 @@ async function loadEbooks() {
     } catch (e) { container.innerHTML = '<p style="color:red; text-align:center; width:100%;">Failed to load library.</p>'; }
 }
 
-
 function openBookRequestModal(bookJSON) {
     selectedBook = JSON.parse(decodeURIComponent(bookJSON));
     document.getElementById('md-book-title').innerText = selectedBook.title;
@@ -1186,7 +1175,6 @@ async function submitIssueRequest() {
     const uEmail = auth.currentUser ? auth.currentUser.email : currentEmail;
 
     try {
-        // 1. CHECK INVENTORY: Is this specific copy already issued?
         const bookRef = doc(db, "books", selectedBook.isbn);
         const bookSnap = await getDoc(bookRef);
 
@@ -1203,7 +1191,6 @@ async function submitIssueRequest() {
             }
         }
 
-        // 2. CHECK USER: Does this user already have this book (Issued or Pending)?
         const qCheck = query(
             collection(db, "issue_requests"),
             where("studentEmail", "==", uEmail),
@@ -1217,12 +1204,10 @@ async function submitIssueRequest() {
             return UI.alert("You already have this book (or a request is pending).");
         }
 
-        // 3. CHECK LIMIT
         const qTotal = query(collection(db, "issue_requests"), where("studentEmail", "==", uEmail), where("status", "==", "issued"));
         const totalSnap = await getDocs(qTotal);
         if(totalSnap.size >= 5) return UI.alert("LIMIT REACHED: You cannot borrow more than 5 books.");
 
-        // 4. SUBMIT
         const d = await getDoc(doc(db, "students", uEmail));
         await addDoc(collection(db, "issue_requests"), {
             studentEmail: uEmail,
@@ -1236,7 +1221,6 @@ async function submitIssueRequest() {
         });
 
         notifyUser(DEMO_ADMIN_EMAIL, `New Issue Request: ${selectedBook.title} by ${d.data().roll}`);
-
         UI.alert("Request Sent! Pending Admin Approval.");
         document.getElementById('book-detail-modal').classList.add('hidden');
 
@@ -1250,7 +1234,6 @@ async function submitIssueRequest() {
 // --- ISSUE & RETURN LOGIC ---
 // ==========================================
 
-// --- NEW FUNCTION: Request Book Return (Student Side) ---
 window.requestBookReturn = async (requestId) => {
     if(!confirm("Request return for this book? This notifies the admin.")) return;
     try {
@@ -1265,7 +1248,6 @@ window.requestBookReturn = async (requestId) => {
 
         UI.alert("Return Request Sent! waiting for admin approval.");
         
-        // Refresh the current modal view to show the status change
         const modalTitle = document.querySelector('#dashboard-details-modal h3');
         if(modalTitle && modalTitle.innerText.includes("Borrowed")) window.showBorrowedDetails();
         else if(modalTitle && modalTitle.innerText.includes("Due")) window.showDueSoonDetails();
@@ -1302,12 +1284,10 @@ window.loadIssueRequests = async function() {
         list.innerHTML = html || "<p style='color:#999; font-size:13px; text-align:center; padding:20px;'>No pending issue requests.</p>";
     });
 
-    // --- UPDATED ADMIN VIEW: Handles 'Return Requested' Filter ---
     const unsubIssued = onSnapshot(qIssued, (snapshot) => {
         const returnList = document.getElementById('return-requests-list');
         if(!returnList) return;
         
-        // OPTIONAL: Update Header to reflect it's a Request Queue
         const headerEl = returnList.previousElementSibling;
         if(headerEl) headerEl.innerHTML = '<i class="fas fa-undo" style="color:#10b981"></i> Return Requests';
 
@@ -1317,7 +1297,6 @@ window.loadIssueRequests = async function() {
         snapshot.forEach(doc => {
             const req = doc.data();
             
-            // --- NEW FILTER: ONLY SHOW IF RETURN REQUESTED ---
             if (!req.returnRequested) return; 
             
             count++;
@@ -1329,10 +1308,7 @@ window.loadIssueRequests = async function() {
             const now = new Date();
             const isOverdue = now > dueDate;
 
-            // Badge for Return Request
             const requestBadge = `<span style="background: #fce7f3; color: #db2777; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1px solid #fbcfe8; margin-left: 8px;">RETURN REQUESTED</span>`;
-
-            // Highlight Border
             const borderStyle = "2px solid #db2777";
 
             htmlRet += `<div class="booking-item" style="background: #fff; border: ${borderStyle}; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
@@ -1380,7 +1356,6 @@ window.processManualReturn = async function(reqStr) {
         });
 
         UI.alert("Book Returned Successfully!");
-        // Note: loadIssueRequests updates automatically now, but we might want to manually refresh stats
         if(typeof updateAdminStats === 'function') updateAdminStats();
         
     } catch(e) {
@@ -1391,12 +1366,9 @@ window.processManualReturn = async function(reqStr) {
 
 function processIssue(reqStr){ selectedRequest = JSON.parse(decodeURIComponent(reqStr)); document.getElementById('verify-book-title').innerText = selectedRequest.bookTitle; document.getElementById('issue-verify-modal').classList.remove('hidden'); }
 
-// --- UPDATED: ISSUE FINALIZATION WITH STOCK ALERTS ---
 async function finalizeIssueBook(){
-    // 1. Update Request Status
     await updateDoc(doc(db, "issue_requests", selectedRequest.id), { status: "issued", issuedAt: serverTimestamp() });
     
-    // 2. Update Inventory
     const bookSnap = await getDocs(query(collection(db,"books"), where("isbn", "==", selectedRequest.bookISBN)));
     if(!bookSnap.empty){
         const bookDoc = bookSnap.docs[0];
@@ -1409,22 +1381,17 @@ async function finalizeIssueBook(){
             
             await updateDoc(bookDoc.ref, { inventory: inv });
 
-            // --- NEW: STOCK NOTIFICATION LOGIC ---
             const newAvailableCount = inv.filter(i => i.status === 'available').length;
             
             if (newAvailableCount === 0) {
-                // Alert: Out of Stock
                 notifyUser(DEMO_ADMIN_EMAIL, `URGENT ALERT: '${selectedRequest.bookTitle}' is now OUT OF STOCK.`);
             } else if (newAvailableCount <= 3) {
-                // Alert: Low Stock
                 notifyUser(DEMO_ADMIN_EMAIL, `STOCK ALERT: '${selectedRequest.bookTitle}' is running low (${newAvailableCount} remaining).`);
             }
         }
     }
     
-    // 3. Notify Admin (Standard Log) & UI Feedback
     notifyUser(DEMO_ADMIN_EMAIL, `Book Issued: ${selectedRequest.bookTitle} to ${selectedRequest.studentRoll}`);
-
     UI.alert("Issued Successfully!"); 
     document.getElementById('issue-verify-modal').classList.add('hidden'); 
     updateAdminStats(); 
@@ -1630,22 +1597,18 @@ window.searchAdminInventory = async function() {
     }
 }
 
-// --- NEW: AI RECOMMENDATION FEATURE ---
 window.getSmartRecommendations = async function() {
     const btn = event.currentTarget;
     const originalHTML = btn.innerHTML;
     
-    // UI Loading State
     btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Finding...`;
     btn.disabled = true;
 
     try {
-        // Fetch User History
         const historySnap = await getDocs(query(collection(db, "issue_requests"), where("studentEmail", "==", currentEmail)));
         let pastReads = [];
         historySnap.forEach(doc => pastReads.push(doc.data().bookTitle));
         
-        // Get Available Inventory (Now using global cache if available or quick fetch)
         const booksSnap = await getDocs(collection(db, "books"));
         let availableBooksList = [];
         booksSnap.forEach(doc => {
@@ -1655,7 +1618,6 @@ window.getSmartRecommendations = async function() {
              }
         });
 
-        // Construct AI Prompt
         const prompt = `
         You are a librarian recommendation engine.
         User's Past Reads: [${pastReads.join(", ") || "None yet"}].
@@ -1669,11 +1631,9 @@ window.getSmartRecommendations = async function() {
         4. Do not recommend books they have already read.
         `;
 
-        // Call AI
         const result = await model.generateContent(prompt);
         const suggestion = await result.response.text();
 
-        // Display Result
         UI.alert(`
             <div style="text-align:left;">
                 <h4 style="color:#4f46e5; margin-bottom:10px;"><i class="fas fa-star"></i> Top Picks For You</h4>
@@ -1691,10 +1651,6 @@ window.getSmartRecommendations = async function() {
     btn.innerHTML = originalHTML;
     btn.disabled = false;
 };
-
-// ==========================================
-// --- CSV UPLOADS & EXPORTS ---
-// ==========================================
 
 window.handleCSVUpload = async (event) => {
     const file = event.target.files[0];
@@ -1858,19 +1814,6 @@ window.toggleSidebar = function() {
 
 window.saveStudentEdit = saveStudentEdit;
 window.toggleAuthMode = toggleAuthMode; window.handleLoginSubmit = handleLoginSubmit; window.verifyOtp = verifyOtp; window.closeOtp = closeOtp; window.logout = logout; window.navigate = navigate;
-window.handleGoogleSignIn = async function() {
-    const provider = new GoogleAuthProvider();
-    const r = document.getElementById('error-msg');
-    if(r) r.innerText = "";
-    
-    try {
-        // Triggers the Google browser popup overlay window
-        await signInWithPopup(auth, provider);
-    } catch(err) {
-        console.error("Google Authentication Interrupted:", err);
-        if(r) r.innerText = "Google Sign-In window closed or timed out.";
-    }
-};
 window.addNewBook = addNewBook; 
 window.searchAdminInventory = searchAdminInventory; 
 window.showAddBookForm = () => { document.getElementById('add-book-modal').classList.remove('hidden'); }; 
@@ -1881,12 +1824,10 @@ window.deleteBook = deleteBook;
 window.togglePdfInput = (v) => { if(v==='yes') document.getElementById('pdf-url-group').classList.remove('hidden'); };
 window.updateBookPDF = () => document.getElementById('update-pdf-input').click();
 
-// --- UPDATED: PDF UPLOAD HANDLER ---
 window.handlePDFUpdateUpload = async (event) => {
     const file = event.target.files[0];
     if (!file || !currentBookId) return;
 
-    // UI Feedback
     const btn = document.getElementById('update-pdf-btn');
     const originalText = btn.innerHTML;
     btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Uploading...`;
@@ -1896,11 +1837,10 @@ window.handlePDFUpdateUpload = async (event) => {
         const path = `pdfs/${currentBookId}_${Date.now()}_${file.name}`;
         const url = await uploadFileToStorage(file, path);
         
-        // Update Firestore
         await updateDoc(doc(db, "books", currentBookId), { pdfUrl: url });
         
         UI.alert("PDF Updated Successfully!");
-        window.displayBook(currentBookId); // Refresh view
+        window.displayBook(currentBookId); 
     } catch (e) {
         console.error("PDF Update Error:", e);
         UI.alert("Failed to update PDF.");
@@ -1911,34 +1851,25 @@ window.handlePDFUpdateUpload = async (event) => {
     }
 };
 
-// --- NEW: TRIGGER COVER INPUT ---
 window.updateBookCover = () => document.getElementById('update-cover-input').click();
 
-// --- NEW: HANDLE COVER UPLOAD ---
 window.handleCoverUpdateUpload = async (event) => {
     const file = event.target.files[0];
     if (!file || !currentBookId) return;
 
-    // UI Feedback
     const btn = document.getElementById('update-cover-btn');
     const originalText = btn.innerHTML;
     btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Uploading...`;
     btn.disabled = true;
 
     try {
-        // Upload to Firebase Storage
         const path = `covers/${currentBookId}_${Date.now()}_${file.name}`;
         const url = await uploadFileToStorage(file, path);
         
-        // Update Firestore Document
         await updateDoc(doc(db, "books", currentBookId), { coverUrl: url });
-        
         UI.alert("Cover Image Updated Successfully!");
-        
-        // Refresh the view to verify (re-fetches the book data)
         window.displayBook(currentBookId); 
         
-        // Also refresh the main inventory list to show the new thumbnail
         if (typeof loadAdminInventory === 'function') loadAdminInventory();
         
     } catch (e) {
@@ -1947,7 +1878,7 @@ window.handleCoverUpdateUpload = async (event) => {
     } finally {
         btn.innerHTML = originalText;
         btn.disabled = false;
-        event.target.value = ""; // Reset input
+        event.target.value = ""; 
     }
 };
 
@@ -1969,12 +1900,11 @@ window.initSeatMonitor = () => {};
 // --- ADVANCED AI LIBRARIAN (OMNISCIENT MODE) ---
 // ==========================================
 
-// Global caches for AI knowledge
 window.aiKnowledge = {
-    books: {},       // Stores Title, Author, Category, Stock
-    issuedDates: {}, // Stores ISBN -> Array of 'IssuedAt' dates (for prediction)
-    userProfile: {}, // Stores current student's Dept, Sem, Name
-    siteMap: {       // Guidance for site navigation
+    books: {},       
+    issuedDates: {}, 
+    userProfile: {}, 
+    siteMap: {       
         "dashboard": "Overview, Fines, Due Dates",
         "books": "Book Catalog, Search, AI Recommendations",
         "ebooks": "Digital Library, PDF Reading",
@@ -1983,12 +1913,9 @@ window.aiKnowledge = {
     }
 };
 
-// --- 1. INITIALIZE AI CONTEXT (Runs on Login) ---
-// Define as standard function FIRST
 function initAIContext() {
     console.log("🧠 AI: Initializing Knowledge Base...");
 
-    // A. Live Book Inventory & Stock
     onSnapshot(collection(db, "books"), (snapshot) => {
         window.aiKnowledge.books = {};
         snapshot.forEach(doc => {
@@ -2007,7 +1934,6 @@ function initAIContext() {
         });
     });
 
-    // B. Live Issue Tracking (For Return Prediction)
     const qIssued = query(collection(db, "issue_requests"), where("status", "==", "issued"));
     onSnapshot(qIssued, (snapshot) => {
         window.aiKnowledge.issuedDates = {};
@@ -2022,7 +1948,6 @@ function initAIContext() {
         });
     });
 
-    // C. Capture User Profile from DOM
     setTimeout(() => {
         const deptText = document.getElementById('db-dept') ? document.getElementById('db-dept').innerText : "";
         const nameText = document.getElementById('db-name') ? document.getElementById('db-name').innerText : "Student";
@@ -2034,7 +1959,6 @@ function initAIContext() {
     }, 3000); 
 }
 
-// --- 2. PREDICTIVE LOGIC ---
 function getPrediction(isbn) {
     const dates = window.aiKnowledge.issuedDates[isbn];
     if (!dates || dates.length === 0) return "Unknown (Admin copy)";
@@ -2051,7 +1975,6 @@ function getPrediction(isbn) {
     return `In approx ${diffDays} days (${dueDate.toLocaleDateString()})`;
 }
 
-// --- 3. CONTEXT BUILDER ---
 function buildSystemPrompt(userMsg) {
     const k = window.aiKnowledge;
     const msgLower = userMsg.toLowerCase();
@@ -2108,8 +2031,6 @@ function buildSystemPrompt(userMsg) {
     `;
 }
 
-// --- 4. CHAT HANDLER ---
-// Defined locally first to avoid ReferenceError
 async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const msg = input.value.trim();
@@ -2144,17 +2065,14 @@ async function sendChatMessage() {
     chatBody.scrollTop = chatBody.scrollHeight;
 }
 
-// Defined locally
 function handleChatKey(e) { 
     if (e.key === 'Enter') sendChatMessage(); 
 }
 
-// --- 5. EXPOSE TO WINDOW ---
 window.initAIContext = initAIContext;
 window.sendChatMessage = sendChatMessage;
 window.handleChatKey = handleChatKey;
 
-// Ensure initAIContext is called when Dashboard loads
 const originalShowDashboard = window.showDashboard;
 window.showDashboard = async function() {
     await originalShowDashboard();

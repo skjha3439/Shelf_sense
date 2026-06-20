@@ -321,20 +321,21 @@
         <div class="right-panel" id="right-panel">
             <div class="form-wrapper">
                 <h2 id="form-title">Student Sign in</h2>
+                
                 <form id="loginForm" onsubmit="window.handleLoginSubmit(event)">
                     <div class="input-group"><label>Email Address</label><input type="email" id="emailInput" placeholder="name@iiitmanipur.ac.in" required></div>
                     <div class="input-group hidden" id="admin-password-group"><label>Admin Password</label><input type="password" id="adminPasswordInput" placeholder="Password"></div>
                     <p id="error-msg" class="error-msg"></p>
                     <button type="submit" class="main-btn" id="action-btn">Sign In</button>
-
-                    <div class="text-center mt-15 mb-15 text-gray-light">— OR —</div>
-                    <button type="button" class="main-btn btn-shadow" id="google-btn" onclick="window.handleGoogleSignIn()">
-                         <img src="https://cdnjs.cloudflare.com/ajax/libs/gapi-idp/1.0.0/glogo.png" alt="Google Logo" style="width: 18px; height: 18px;">
-                          Sign in with Google
-                    </button>
-
-                    <div class="text-center mt-20"><a href="#" class="admin-link" id="toggle-auth-btn" onclick="window.toggleAuthMode(event)">Login as Admin</a></div>
                 </form>
+
+                <div class="text-center mt-15 mb-15 text-gray-light">— OR —</div>
+                <button type="button" class="btn-outline w-full flex-center-gap google-btn" onclick="window.handleGoogleSignIn()">
+                    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/google/google-original.svg" alt="Google Logo" style="width: 18px; height: 18px;">
+                    <span style="font-weight: 600; color: #444;">Sign in with Google</span>
+                </button>
+
+                <div class="text-center mt-20"><a href="#" class="admin-link" id="toggle-auth-btn" onclick="window.toggleAuthMode(event)">Login as Admin</a></div>
             </div>
         </div>
     </div>
