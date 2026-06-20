@@ -14,7 +14,7 @@ const firebaseConfig = {
 };
 
 // --- API KEY ---
-const GEMINI_API_KEY = "AIzaSyCTPGu-0WfiQ6fZfuNP49lhOqK5MoDGhpE";
+const GEMINI_API_KEY = "AIzaSyCroL2cMb8DL_6spR7E06V_Pfh8mCuMbIA";
 
 const EMAILJS_SERVICE_ID = "service_dlor7u4"; 
 const EMAILJS_TEMPLATE_ID = "template_ef517pa";
@@ -28,8 +28,7 @@ const storage = getStorage(app);
 
 // --- INITIALIZE AI ---
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 // --- REALTIME LISTENER VARIABLES ---
 let unsubscribeIssueListener = null;
 let unsubscribeInventoryListener = null;
