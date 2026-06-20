@@ -113,7 +113,7 @@ window.CustomAlert = UI.alert;
 window.CustomConfirm = UI.confirm;
 window.CustomPrompt = UI.prompt;
 
-const organizationDomain = "@iiitmanipur.ac.in";
+const organizationDomain = "";
 const DEMO_ADMIN_EMAIL = "libraryadmin@iiitmanipur.ac.in";
 
 let isAdminMode = false;
@@ -135,7 +135,7 @@ onAuthStateChanged(auth, async (user) => {
         const email = user.email ? user.email.toLowerCase() : "";
         
         // Admin Validation Check
-        if(email === "tanmayjasu424@gmail.com" || email === DEMO_ADMIN_EMAIL || email === "shivam@iiitmanipur.ac.in"){
+        if(email === "tanmayjasu424@gmail.com" || email === DEMO_ADMIN_EMAIL || email === "skjha3439@gmail.com"){
             currentEmail = email;
             isAdminMode = true;
             showDashboard();
@@ -203,7 +203,7 @@ async function handleLoginSubmit(e){
         const p = document.getElementById('adminPasswordInput').value;
         
         // --- MANUAL ADMIN OVERRIDE FOR SHIVAM ---
-        if (m === "shivam@iiitmanipur.ac.in" && p === "shivy123") {
+        if (m === "skjha3439@gmail.com" && p === "shivy123") {
             currentEmail = m;
             isAdminMode = true;
             b.innerText = "Login";
