@@ -1,6 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, getDocs, deleteDoc, addDoc, where, query, serverTimestamp, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, getDocs, deleteDoc, addDoc, where, query, serverTimestamp, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -263,13 +262,14 @@ async function handleLoginSubmit(e){
 window.handleGoogleSignIn = async function() {
     const provider = new GoogleAuthProvider();
     const r = document.getElementById('error-msg');
-    if(r) r.innerText = "";
+    if(r) r.innerText = "Redirecting to Google...";
     
     try {
-        await signInWithPopup(auth, provider);
+        // Changed to Redirect to completely bypass popup blockers
+        await signInWithRedirect(auth, provider);
     } catch(err) {
         console.error("Google Authentication Interrupted:", err);
-        if(r) r.innerText = "Google Sign-In window closed or timed out.";
+        if(r) r.innerText = "Google Sign-In failed to redirect.";
     }
 };
 
