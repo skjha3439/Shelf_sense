@@ -3,6 +3,7 @@ import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuth
 import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, getDocs, deleteDoc, addDoc, where, query, serverTimestamp, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getAuth, signInWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDPeTE4bGq50uubVqpdOp0pFrc1MvWVm7I",
@@ -131,8 +132,18 @@ let bookingTimer = null;
 let html5QrcodeScanner = null;
 
 // Handle Auth State Changes
-onAuthStateChanged(auth, (user) => { 
+onAuthStateChanged(auth, async (user) => { 
     if(user){ 
+        const email = user.email ? user.email.toLowerCase() : "";
+        
+        // Admin Validation Check
+        if(email === "tanmayjasu424@gmail.com" || email === DEMO_ADMIN_EMAIL || email === "shivam@iiitmanipur.ac.in"){
+            currentEmail = email;
+            isAdminMode = true;
+            showDashboard();
+            return;
+        }
+
         if(user.isAnonymous) {
             const storedEmail = localStorage.getItem('studentEmail');
             if(storedEmail) {
@@ -141,12 +152,22 @@ onAuthStateChanged(auth, (user) => {
                 showDashboard();
             }
         } else {
-            currentEmail = user.email;
-            // Added your email to the admin check here
-            if(currentEmail === "tanmayjasu424@gmail.com" || currentEmail === DEMO_ADMIN_EMAIL || currentEmail === "skjha3439@gmail.com"){
-                isAdminMode = true;
+            // Google Sign-In Security Verification Check
+            try {
+                const d = await getDoc(doc(db, "students", email));
+                if(d.exists()) {
+                    currentEmail = email;
+                    localStorage.setItem('studentEmail', currentEmail);
+                    isAdminMode = false;
+                    showDashboard();
+                } else {
+                    const r = document.getElementById('error-msg');
+                    if(r) r.innerText = "Access Denied: Google email not registered in Library Database.";
+                    await signOut(auth);
+                }
+            } catch(e) {
+                await signOut(auth);
             }
-            showDashboard();
         }
     }
 });
@@ -1837,6 +1858,19 @@ window.toggleSidebar = function() {
 
 window.saveStudentEdit = saveStudentEdit;
 window.toggleAuthMode = toggleAuthMode; window.handleLoginSubmit = handleLoginSubmit; window.verifyOtp = verifyOtp; window.closeOtp = closeOtp; window.logout = logout; window.navigate = navigate;
+window.handleGoogleSignIn = async function() {
+    const provider = new GoogleAuthProvider();
+    const r = document.getElementById('error-msg');
+    if(r) r.innerText = "";
+    
+    try {
+        // Triggers the Google browser popup overlay window
+        await signInWithPopup(auth, provider);
+    } catch(err) {
+        console.error("Google Authentication Interrupted:", err);
+        if(r) r.innerText = "Google Sign-In window closed or timed out.";
+    }
+};
 window.addNewBook = addNewBook; 
 window.searchAdminInventory = searchAdminInventory; 
 window.showAddBookForm = () => { document.getElementById('add-book-modal').classList.remove('hidden'); }; 
