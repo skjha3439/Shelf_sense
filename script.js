@@ -262,14 +262,15 @@ async function handleLoginSubmit(e){
 window.handleGoogleSignIn = async function() {
     const provider = new GoogleAuthProvider();
     const r = document.getElementById('error-msg');
-    if(r) r.innerText = "Redirecting to Google...";
+    if(r) r.innerText = "Connecting to Google...";
     
     try {
-        // Changed to Redirect to completely bypass popup blockers
-        await signInWithRedirect(auth, provider);
+        // We use popup here because redirect requires page reloads which breaks SPAs
+        await signInWithPopup(auth, provider);
     } catch(err) {
-        console.error("Google Authentication Interrupted:", err);
-        if(r) r.innerText = "Google Sign-In failed to redirect.";
+        console.error("Full Firebase Error:", err);
+        // This will print the exact Firebase failure reason on your screen
+        if(r) r.innerText = "Error: " + err.code + " - " + err.message;
     }
 };
 
