@@ -4,7 +4,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDPeTE4bGq50uubVqpdOp0pFrc1MvWVm7I",
+    apiKey: "AIzaSyA-R3sAD_g6bFaG9v4NmNysd811c74nCM",
     authDomain: "shelf-sense-19378.firebaseapp.com",
     projectId: "shelf-sense-19378",
     storageBucket: "shelf-sense-19378.firebasestorage.app",
