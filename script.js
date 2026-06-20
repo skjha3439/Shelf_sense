@@ -179,13 +179,12 @@ async function handleLoginSubmit(e){
     const b = document.getElementById('action-btn');
     r.innerText = "";
 
-    
     // --- ADMIN LOGIC ---
     if(isAdminMode){
         const p = document.getElementById('adminPasswordInput').value;
         
-        // --- MANUAL ADMIN OVERRIDE FOR SHIVAM ---
-        if (m === "skjha3439@gmail.com" && p === "shivy123") {
+        // Manual Admin Override for Shivam
+        if (m === "shivam@iiitmanipur.ac.in" && p === "shivy123") {
             currentEmail = m;
             isAdminMode = true;
             b.innerText = "Login";
@@ -196,7 +195,6 @@ async function handleLoginSubmit(e){
         try {
             b.innerText = "Verifying...";
             await signInWithEmailAndPassword(auth, m, p);
-            // onAuthStateChanged will handle redirection on success
         } catch(err){ 
             console.error(err);
             b.innerText = "Login"; 
@@ -205,48 +203,41 @@ async function handleLoginSubmit(e){
         return;
     }
 
-    // --- STUDENT LOGIC ---
-    if(m === "a@iiitmanipur.ac.in"){
-        generatedOtp = Math.floor(100000+Math.random()*900000).toString();
-        currentEmail = m;
-        await UI.alert(`DEV MODE OTP: ${generatedOtp}`);
-        showOtpScreen(m);
-        return;
-    }
-
-    if(!m.endsWith(organizationDomain)){ 
-        r.innerText=`Access restricted to ${organizationDomain}`; 
+    // --- STUDENT LOGIC (NEW INSTANT PASSWORDLESS FLOW) ---
+    // If organizationDomain is set, validate it
+    if(organizationDomain !== "" && !m.endsWith(organizationDomain)){ 
+        r.innerText = `Access restricted to ${organizationDomain}`; 
         return; 
     }
     
-    b.innerText = "Checking DB..."; b.disabled = true;
+    b.innerText = "Verifying..."; b.disabled = true;
 
     try {
         const docRef = doc(db, "students", m);
         const d = await getDoc(docRef);
         
         if (d.exists()) {
-            generatedOtp = Math.floor(100000+Math.random()*900000).toString();
             currentEmail = m;
-            const params = { to_email: m, otp_code: generatedOtp };
-            emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params, EMAILJS_PUBLIC_KEY)
-            .then(() => { 
-                b.innerText = "Send OTP"; b.disabled = false; 
-                showOtpScreen(m); 
+            // Instantly perform anonymous authentication session
+            signInAnonymously(auth)
+            .then(() => {
+                localStorage.setItem('studentEmail', currentEmail);
+                b.innerText = "Sign In"; b.disabled = false;
+                showDashboard();
             })
-            .catch((err) => { 
-                console.error(err);
-                UI.alert(`EmailJS Error. Dev Fallback: OTP is ${generatedOtp}`); 
-                showOtpScreen(m); 
-                b.innerText = "Send OTP"; b.disabled = false; 
+            .catch((e) => {
+                console.warn("Auth warning, performing local fallback configuration...", e);
+                localStorage.setItem('studentEmail', currentEmail);
+                b.innerText = "Sign In"; b.disabled = false;
+                showDashboard();
             });
         } else {
             b.innerText = "Send OTP"; b.disabled = false;
-            r.innerText = "Access Denied: Student not registered.";
+            r.innerText = "Access Denied: Student email not registered in Library Database.";
         }
     } catch(err){ 
         console.error(err); 
-        r.innerText = "System Error."; 
+        r.innerText = "System error verifying profile details."; 
         b.disabled = false; 
     }
 }
